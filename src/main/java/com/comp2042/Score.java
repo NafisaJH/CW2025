@@ -11,6 +11,10 @@ public final class Score {
         return score;
     }
 
+    public static int calculateScoreBonus(int clearedCount) {
+        return 50 * clearedCount * clearedCount;
+    }
+
     public void add(int i){
         score.setValue(score.getValue() + i);
     }

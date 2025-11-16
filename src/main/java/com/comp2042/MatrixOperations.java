@@ -1,5 +1,7 @@
 package com.comp2042;
 
+import javafx.util.Pair;
+
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
@@ -9,7 +11,6 @@ import java.util.stream.Collectors;
 public class MatrixOperations {
 
 
-    //We don't want to instantiate this utility class
     private MatrixOperations(){
 
     }
@@ -17,9 +18,9 @@ public class MatrixOperations {
     public static boolean intersect(final int[][] matrix, final int[][] brick, int x, int y) {
         for (int i = 0; i < brick.length; i++) {
             for (int j = 0; j < brick[i].length; j++) {
-                int targetX = x + i;
-                int targetY = y + j;
-                if (brick[j][i] != 0 && (checkOutOfBound(matrix, targetX, targetY) || matrix[targetY][targetX] != 0)) {
+                int targetX = x + j;
+                int targetY = y + i;
+                if (brick[i][j] != 0 && (checkOutOfBound(matrix, targetX, targetY) || matrix[targetY][targetX] != 0)) {
                     return true;
                 }
             }
@@ -50,10 +51,10 @@ public class MatrixOperations {
         int[][] copy = copy(filledFields);
         for (int i = 0; i < brick.length; i++) {
             for (int j = 0; j < brick[i].length; j++) {
-                int targetX = x + i;
-                int targetY = y + j;
-                if (brick[j][i] != 0) {
-                    copy[targetY][targetX] = brick[j][i];
+                int targetX = x + j;
+                int targetY = y + i;
+                if (brick[i][j] != 0) {
+                    copy[targetY][targetX] = brick[i][j];
                 }
             }
         }
@@ -61,25 +62,39 @@ public class MatrixOperations {
     }
 
     public static ClearRow checkRemoving(final int[][] matrix) {
-        int[][] tmp = new int[matrix.length][matrix[0].length];
+        Pair<List<Integer>, Deque<int[]>> result = filterRows(matrix);
+        List<Integer> clearedRows = result.getKey();
+        Deque<int[]> newRows = result.getValue();
+
+        int[][] tmp = rebuildMatrix(matrix, newRows);
+        int scoreBonus = Score.calculateScoreBonus(clearedRows.size());
+        return new ClearRow(clearedRows.size(), tmp, scoreBonus);
+    }
+
+    private static boolean isRowFull(int[] row) {
+        for (int cell : row) {
+            if (cell == 0) return false;
+        }
+        return true;
+    }
+
+    private static Pair<List<Integer>, Deque<int[]>> filterRows(int[][] matrix) {
         Deque<int[]> newRows = new ArrayDeque<>();
         List<Integer> clearedRows = new ArrayList<>();
 
         for (int i = 0; i < matrix.length; i++) {
-            int[] tmpRow = new int[matrix[i].length];
-            boolean rowToClear = true;
-            for (int j = 0; j < matrix[0].length; j++) {
-                if (matrix[i][j] == 0) {
-                    rowToClear = false;
-                }
-                tmpRow[j] = matrix[i][j];
-            }
-            if (rowToClear) {
+            int[] row = matrix[i];
+            if (isRowFull(row)) {
                 clearedRows.add(i);
             } else {
-                newRows.add(tmpRow);
+                newRows.add(row.clone());
             }
         }
+        return new Pair<>(clearedRows, newRows);
+    }
+
+    private static int[][] rebuildMatrix(int[][] matrix, Deque<int[]> newRows) {
+        int[][] tmp = new int[matrix.length][matrix[0].length];
         for (int i = matrix.length - 1; i >= 0; i--) {
             int[] row = newRows.pollLast();
             if (row != null) {
@@ -88,8 +103,7 @@ public class MatrixOperations {
                 break;
             }
         }
-        int scoreBonus = 50 * clearedRows.size() * clearedRows.size();
-        return new ClearRow(clearedRows.size(), tmp, scoreBonus);
+        return tmp;
     }
 
     public static List<int[][]> deepCopyList(List<int[][]> list){

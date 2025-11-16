@@ -10,15 +10,21 @@ import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.Group;
+import javafx.scene.control.Label;
 import javafx.scene.effect.Reflection;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
+import javafx.scene.media.Media;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
 import javafx.util.Duration;
+import javafx.scene.control.Button;
+import javafx.scene.media.MediaPlayer;
+
 
 import java.net.URL;
 import java.util.ResourceBundle;
@@ -26,6 +32,8 @@ import java.util.ResourceBundle;
 public class GuiController implements Initializable {
 
     private static final int BRICK_SIZE = 20;
+
+    public BorderPane gameBoard;
 
     @FXML
     private GridPane gamePanel;
@@ -39,6 +47,15 @@ public class GuiController implements Initializable {
     @FXML
     private GameOverPanel gameOverPanel;
 
+    @FXML
+    private GridPane nextBrickPanel;
+
+    //@FXML
+    //private Button pauseButton;
+
+    @FXML
+    private Label scoreLabel;
+
     private Rectangle[][] displayMatrix;
 
     private InputEventListener eventListener;
@@ -51,31 +68,34 @@ public class GuiController implements Initializable {
 
     private final BooleanProperty isGameOver = new SimpleBooleanProperty();
 
+    private MediaPlayer scoreSoundPlayer;
+
     @Override
     public void initialize(URL location, ResourceBundle resources) {
+        Media sound = new Media(getClass().getResource("/score_points.mp3").toExternalForm());
+        scoreSoundPlayer = new MediaPlayer(sound);
         Font.loadFont(getClass().getClassLoader().getResource("digital.ttf").toExternalForm(), 38);
         gamePanel.setFocusTraversable(true);
         gamePanel.requestFocus();
+
         gamePanel.setOnKeyPressed(new EventHandler<KeyEvent>() {
             @Override
             public void handle(KeyEvent keyEvent) {
                 if (isPause.getValue() == Boolean.FALSE && isGameOver.getValue() == Boolean.FALSE) {
-                    if (keyEvent.getCode() == KeyCode.LEFT || keyEvent.getCode() == KeyCode.A) {
-                        refreshBrick(eventListener.onLeftEvent(new MoveEvent(EventType.LEFT, EventSource.USER)));
-                        keyEvent.consume();
+                    switch (keyEvent.getCode()) {
+                        case LEFT, A -> refreshBrick(eventListener.onLeftEvent(new MoveEvent(EventType.LEFT, EventSource.USER)));
+                        case RIGHT, D -> refreshBrick(eventListener.onRightEvent(new MoveEvent(EventType.RIGHT, EventSource.USER)));
+                        case UP, W -> refreshBrick(eventListener.onRotateEvent(new MoveEvent(EventType.ROTATE, EventSource.USER)));
+                        case DOWN, S -> moveDown(new MoveEvent(EventType.DOWN, EventSource.USER));
                     }
-                    if (keyEvent.getCode() == KeyCode.RIGHT || keyEvent.getCode() == KeyCode.D) {
-                        refreshBrick(eventListener.onRightEvent(new MoveEvent(EventType.RIGHT, EventSource.USER)));
-                        keyEvent.consume();
-                    }
-                    if (keyEvent.getCode() == KeyCode.UP || keyEvent.getCode() == KeyCode.W) {
-                        refreshBrick(eventListener.onRotateEvent(new MoveEvent(EventType.ROTATE, EventSource.USER)));
-                        keyEvent.consume();
-                    }
-                    if (keyEvent.getCode() == KeyCode.DOWN || keyEvent.getCode() == KeyCode.S) {
-                        moveDown(new MoveEvent(EventType.DOWN, EventSource.USER));
-                        keyEvent.consume();
-                    }
+                    keyEvent.consume();
+
+                }
+
+                if (keyEvent.getCode() == KeyCode.P) {
+                    pauseGame(null);
+                    keyEvent.consume();
+                    return;
                 }
                 if (keyEvent.getCode() == KeyCode.N) {
                     newGame(null);
@@ -120,6 +140,8 @@ public class GuiController implements Initializable {
         ));
         timeLine.setCycleCount(Timeline.INDEFINITE);
         timeLine.play();
+
+        renderNextBrick(brick);
     }
 
     private Paint getFillColor(int i) {
@@ -183,15 +205,36 @@ public class GuiController implements Initializable {
         rectangle.setArcWidth(9);
     }
 
+    public void renderNextBrick(ViewData viewData) {
+        nextBrickPanel.getChildren().clear();
+        int[][] nextBrick = viewData.getNextBrickData();
+
+        for (int row = 0; row < nextBrick.length; row++) {
+            for (int col = 0; col < nextBrick[row].length; col++) {
+                if (nextBrick[row][col] != 0) {
+                    Rectangle cell = new Rectangle(20, 20);
+                    cell.setFill(getFillColor(nextBrick[row][col]));
+                    cell.setStroke(Color.BLACK);
+                    nextBrickPanel.add(cell, col, row);
+                }
+            }
+        }
+    }
+
     private void moveDown(MoveEvent event) {
         if (isPause.getValue() == Boolean.FALSE) {
             DownData downData = eventListener.onDownEvent(event);
             if (downData.getClearRow() != null && downData.getClearRow().getLinesRemoved() > 0) {
+                if (scoreSoundPlayer != null) {
+                    scoreSoundPlayer.stop();
+                    scoreSoundPlayer.play();
+                }
                 NotificationPanel notificationPanel = new NotificationPanel("+" + downData.getClearRow().getScoreBonus());
                 groupNotification.getChildren().add(notificationPanel);
                 notificationPanel.showScore(groupNotification.getChildren());
             }
             refreshBrick(downData.getViewData());
+            renderNextBrick(downData.getViewData());
         }
         gamePanel.requestFocus();
     }
@@ -201,6 +244,9 @@ public class GuiController implements Initializable {
     }
 
     public void bindScore(IntegerProperty integerProperty) {
+        scoreLabel.textProperty().bind(integerProperty.asString("Score: %d"));
+        scoreLabel.setTextFill(Color.WHITE);
+        scoreLabel.setFont(Font.font("Arial", 24));
     }
 
     public void gameOver() {
@@ -220,6 +266,18 @@ public class GuiController implements Initializable {
     }
 
     public void pauseGame(ActionEvent actionEvent) {
+        if (isGameOver.get()) return;
+
+        if (isPause.get()) {
+            timeLine.play();
+            isPause.set(false);
+            //if (pauseButton != null) pauseButton.setText("Pause");
+        } else {
+            timeLine.pause();
+            isPause.set(true);
+            //if (pauseButton != null) pauseButton.setText("Resume");
+        }
+
         gamePanel.requestFocus();
     }
-}
+    }

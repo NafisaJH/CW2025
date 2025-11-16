@@ -13,13 +13,15 @@
         <center>
             <GridPane fx:id="gamePanel" hgap="1" vgap="1" layoutY="30" layoutX="40"/>
         </center>
+        <Label fx:id="scoreLabel" text="Score: 0" />
     </BorderPane>
-
     <Group fx:id="groupNotification" layoutX="14" layoutY="203">
         <VBox alignment="CENTER">
             <GameOverPanel fx:id="gameOverPanel"/>
         </VBox>
     </Group>
+    <Label text="Next" layoutX="300" layoutY="30"/>
+    <GridPane fx:id="nextBrickPanel" layoutX="300" layoutY="50" hgap="1" vgap="1"/>
     <stylesheets>
         <URL value="@window_style.css"/>
     </stylesheets>
