@@ -1,113 +1,63 @@
 package com.comp2042;
 
-import javafx.util.Pair;
-
-import java.util.ArrayDeque;
-import java.util.ArrayList;
-import java.util.Deque;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.Arrays;
 
-public class MatrixOperations {
+public final class MatrixOperations {
 
-
-    private MatrixOperations(){
-
+    private MatrixOperations() {}
+    
+    public static int[][] copy(int[][] original) {
+        int[][] copy = new int[original.length][];
+        for (int i = 0; i < original.length; i++) {
+            copy[i] = Arrays.copyOf(original[i], original[i].length);
+        }
+        return copy;
     }
 
-    public static boolean intersect(final int[][] matrix, final int[][] brick, int x, int y) {
+    public static List<int[][]> deepCopyList(List<int[][]> list) {
+        return list.stream().map(MatrixOperations::copy).collect(Collectors.toList());
+    }
+
+    public static int[][] rebuildMatrix(int[][] matrix, java.util.Deque<int[]> newRows) {
+        int[][] tmp = new int[matrix.length][matrix[0].length];
+        for (int i = matrix.length - 1; i >= 0; i--) {
+            int[] row = newRows.pollLast();
+            if (row != null) tmp[i] = row;
+        }
+        return tmp;
+    }
+
+    public static boolean intersect(int[][] matrix, int[][] brick, int x, int y) {
         for (int i = 0; i < brick.length; i++) {
             for (int j = 0; j < brick[i].length; j++) {
-                int targetX = x + j;
-                int targetY = y + i;
-                if (brick[i][j] != 0 && (checkOutOfBound(matrix, targetX, targetY) || matrix[targetY][targetX] != 0)) {
-                    return true;
+                if (brick[i][j] != 0) {
+                    int targetX = x + j;
+                    int targetY = y + i;
+                    if (isOutOfBounds(matrix, targetX, targetY) || matrix[targetY][targetX] != 0) {
+                        return true;
+                    }
                 }
             }
         }
         return false;
     }
 
-    private static boolean checkOutOfBound(int[][] matrix, int targetX, int targetY) {
-        boolean returnValue = true;
-        if (targetX >= 0 && targetY < matrix.length && targetX < matrix[targetY].length) {
-            returnValue = false;
-        }
-        return returnValue;
-    }
-
-    public static int[][] copy(int[][] original) {
-        int[][] myInt = new int[original.length][];
-        for (int i = 0; i < original.length; i++) {
-            int[] aMatrix = original[i];
-            int aLength = aMatrix.length;
-            myInt[i] = new int[aLength];
-            System.arraycopy(aMatrix, 0, myInt[i], 0, aLength);
-        }
-        return myInt;
-    }
-
-    public static int[][] merge(int[][] filledFields, int[][] brick, int x, int y) {
-        int[][] copy = copy(filledFields);
+    public static int[][] mergeBrickIntoMatrix(int[][] matrix, int[][] brick, int x, int y) {
+        int[][] copy = MatrixOperations.copy(matrix);
         for (int i = 0; i < brick.length; i++) {
             for (int j = 0; j < brick[i].length; j++) {
-                int targetX = x + j;
-                int targetY = y + i;
                 if (brick[i][j] != 0) {
-                    copy[targetY][targetX] = brick[i][j];
+                    copy[y + i][x + j] = brick[i][j];
                 }
             }
         }
         return copy;
     }
 
-    public static ClearRow checkRemoving(final int[][] matrix) {
-        Pair<List<Integer>, Deque<int[]>> result = filterRows(matrix);
-        List<Integer> clearedRows = result.getKey();
-        Deque<int[]> newRows = result.getValue();
-
-        int[][] tmp = rebuildMatrix(matrix, newRows);
-        int scoreBonus = Score.calculateScoreBonus(clearedRows.size());
-        return new ClearRow(clearedRows.size(), tmp, scoreBonus);
-    }
-
-    private static boolean isRowFull(int[] row) {
-        for (int cell : row) {
-            if (cell == 0) return false;
-        }
-        return true;
-    }
-
-    private static Pair<List<Integer>, Deque<int[]>> filterRows(int[][] matrix) {
-        Deque<int[]> newRows = new ArrayDeque<>();
-        List<Integer> clearedRows = new ArrayList<>();
-
-        for (int i = 0; i < matrix.length; i++) {
-            int[] row = matrix[i];
-            if (isRowFull(row)) {
-                clearedRows.add(i);
-            } else {
-                newRows.add(row.clone());
-            }
-        }
-        return new Pair<>(clearedRows, newRows);
-    }
-
-    private static int[][] rebuildMatrix(int[][] matrix, Deque<int[]> newRows) {
-        int[][] tmp = new int[matrix.length][matrix[0].length];
-        for (int i = matrix.length - 1; i >= 0; i--) {
-            int[] row = newRows.pollLast();
-            if (row != null) {
-                tmp[i] = row;
-            } else {
-                break;
-            }
-        }
-        return tmp;
-    }
-
-    public static List<int[][]> deepCopyList(List<int[][]> list){
-        return list.stream().map(MatrixOperations::copy).collect(Collectors.toList());
+    private static boolean isOutOfBounds(int[][] matrix, int x, int y) {
+        return x < 0 || y < 0 || y >= matrix.length || x >= matrix[y].length;
     }
 
 }

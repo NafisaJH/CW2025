@@ -50,6 +50,8 @@ public class GuiController implements Initializable {
     @FXML
     private GridPane nextBrickPanel;
 
+    private Rectangle[][] nextBrickRectangles;
+
     //@FXML
     //private Button pauseButton;
 
@@ -141,7 +143,7 @@ public class GuiController implements Initializable {
         timeLine.setCycleCount(Timeline.INDEFINITE);
         timeLine.play();
 
-        renderNextBrick(brick);
+        showNextBrick(brick);
     }
 
     private Paint getFillColor(int i) {
@@ -205,18 +207,19 @@ public class GuiController implements Initializable {
         rectangle.setArcWidth(9);
     }
 
-    public void renderNextBrick(ViewData viewData) {
-        nextBrickPanel.getChildren().clear();
-        int[][] nextBrick = viewData.getNextBrickData();
+    private void showNextBrick(ViewData brick) {
+        int[][] nextBrickData = brick.getNextBrickData();
 
-        for (int row = 0; row < nextBrick.length; row++) {
-            for (int col = 0; col < nextBrick[row].length; col++) {
-                if (nextBrick[row][col] != 0) {
-                    Rectangle cell = new Rectangle(20, 20);
-                    cell.setFill(getFillColor(nextBrick[row][col]));
-                    cell.setStroke(Color.BLACK);
-                    nextBrickPanel.add(cell, col, row);
-                }
+        nextBrickPanel.getChildren().clear();
+
+        nextBrickRectangles = new Rectangle[nextBrickData.length][nextBrickData[0].length];
+
+        for (int i = 0; i < nextBrickData.length; i++) {
+            for (int j = 0; j < nextBrickData[i].length; j++) {
+                Rectangle rectangle = new Rectangle(BRICK_SIZE, BRICK_SIZE);
+                rectangle.setFill(getFillColor(nextBrickData[i][j]));
+                nextBrickRectangles[i][j] = rectangle;
+                nextBrickPanel.add(rectangle, j, i);
             }
         }
     }
@@ -234,7 +237,7 @@ public class GuiController implements Initializable {
                 notificationPanel.showScore(groupNotification.getChildren());
             }
             refreshBrick(downData.getViewData());
-            renderNextBrick(downData.getViewData());
+            showNextBrick(downData.getViewData());
         }
         gamePanel.requestFocus();
     }

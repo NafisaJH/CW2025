@@ -21,7 +21,7 @@
         </VBox>
     </Group>
     <Label text="Next" layoutX="300" layoutY="30"/>
-    <GridPane fx:id="nextBrickPanel" layoutX="300" layoutY="50" hgap="1" vgap="1"/>
+    <GridPane fx:id="nextBrickPanel" layoutX="300" layoutY="50" hgap = "1" vgap = "1"/>
     <stylesheets>
         <URL value="@window_style.css"/>
     </stylesheets>
