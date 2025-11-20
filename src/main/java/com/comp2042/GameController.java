@@ -16,26 +16,39 @@ public class GameController implements InputEventListener {
 
     @Override
     public DownData onDownEvent(MoveEvent event) {
-        boolean canMove = board.moveBrickDown();
-        ClearRow clearRow = null;
-        if (!canMove) {
-            board.mergeBrickToBackground();
-            clearRow = board.clearRows();
-            if (clearRow.getLinesRemoved() > 0) {
-                board.getScore().add(clearRow.getScoreBonus());
-            }
-            if (board.createNewBrick()) {
-                viewGuiController.gameOver();
-            }
-
-            viewGuiController.refreshGameBackground(board.getBoardMatrix());
-
+        if (board.moveBrickDown()) {
+            handleBrickMovedByUser(event);
+            return new DownData(null, board.getViewData());
         } else {
-            if (event.getEventSource() == EventSource.USER) {
-                board.getScore().add(1);
-            }
+            return handleBrickLocked();
         }
+    }
+
+    private void handleBrickMovedByUser(MoveEvent event) {
+        if (event.getEventSource() == EventSource.USER) {
+            board.getScore().addPoints(1);
+        }
+    }
+
+    private DownData handleBrickLocked() {
+        board.mergeBrickToBackground();
+        ClearRow clearRow = board.clearRows();
+
+        updateScore(clearRow);
+
+        boolean gameOver = board.createNewBrick();
+        if (gameOver) {
+            viewGuiController.gameOver();
+        }
+
+        viewGuiController.refreshGameBackground(board.getBoardMatrix());
         return new DownData(clearRow, board.getViewData());
+    }
+
+    private void updateScore(ClearRow clearRow) {
+        if (clearRow != null && clearRow.getLinesRemoved() > 0) {
+            board.getScore().addPoints(clearRow.getScoreBonus());
+        }
     }
 
     @Override
