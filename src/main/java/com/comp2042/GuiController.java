@@ -1,10 +1,6 @@
 package com.comp2042;
 
-import javafx.animation.KeyFrame;
-import javafx.animation.Timeline;
-import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.IntegerProperty;
-import javafx.beans.property.SimpleBooleanProperty;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
@@ -21,10 +17,7 @@ import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
-import javafx.util.Duration;
-import javafx.scene.control.Button;
 import javafx.scene.media.MediaPlayer;
-
 
 import java.net.URL;
 import java.util.ResourceBundle;
@@ -64,13 +57,10 @@ public class GuiController implements Initializable {
 
     private Rectangle[][] rectangles;
 
-    private Timeline timeLine;
-
-    private final BooleanProperty isPause = new SimpleBooleanProperty();
-
-    private final BooleanProperty isGameOver = new SimpleBooleanProperty();
-
     private MediaPlayer scoreSoundPlayer;
+
+    private GameStateManager stateManager;
+
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
@@ -79,11 +69,13 @@ public class GuiController implements Initializable {
         Font.loadFont(getClass().getClassLoader().getResource("digital.ttf").toExternalForm(), 38);
         gamePanel.setFocusTraversable(true);
         gamePanel.requestFocus();
+        stateManager = new GameStateManager(gameOverPanel);
+
 
         gamePanel.setOnKeyPressed(new EventHandler<KeyEvent>() {
             @Override
             public void handle(KeyEvent keyEvent) {
-                if (isPause.getValue() == Boolean.FALSE && isGameOver.getValue() == Boolean.FALSE) {
+                if (!stateManager.isPaused() && !stateManager.isGameOver()) {
                     switch (keyEvent.getCode()) {
                         case LEFT, A -> refreshBrick(eventListener.onLeftEvent(new MoveEvent(EventType.LEFT, EventSource.USER)));
                         case RIGHT, D -> refreshBrick(eventListener.onRightEvent(new MoveEvent(EventType.RIGHT, EventSource.USER)));
@@ -113,6 +105,8 @@ public class GuiController implements Initializable {
     }
 
     public void initGameView(int[][] boardMatrix, ViewData brick) {
+        stateManager.startGameLoop(() -> moveDown(new MoveEvent(EventType.DOWN, EventSource.THREAD)));
+
         displayMatrix = new Rectangle[boardMatrix.length][boardMatrix[0].length];
         for (int i = 2; i < boardMatrix.length; i++) {
             for (int j = 0; j < boardMatrix[i].length; j++) {
@@ -135,54 +129,26 @@ public class GuiController implements Initializable {
         brickPanel.setLayoutX(gamePanel.getLayoutX() + brick.getxPosition() * brickPanel.getVgap() + brick.getxPosition() * BRICK_SIZE);
         brickPanel.setLayoutY(-42 + gamePanel.getLayoutY() + brick.getyPosition() * brickPanel.getHgap() + brick.getyPosition() * BRICK_SIZE);
 
-
-        timeLine = new Timeline(new KeyFrame(
-                Duration.millis(400),
-                ae -> moveDown(new MoveEvent(EventType.DOWN, EventSource.THREAD))
-        ));
-        timeLine.setCycleCount(Timeline.INDEFINITE);
-        timeLine.play();
-
         showNextBrick(brick);
     }
 
     private Paint getFillColor(int i) {
-        Paint returnPaint;
-        switch (i) {
-            case 0:
-                returnPaint = Color.TRANSPARENT;
-                break;
-            case 1:
-                returnPaint = Color.AQUA;
-                break;
-            case 2:
-                returnPaint = Color.BLUEVIOLET;
-                break;
-            case 3:
-                returnPaint = Color.DARKGREEN;
-                break;
-            case 4:
-                returnPaint = Color.YELLOW;
-                break;
-            case 5:
-                returnPaint = Color.RED;
-                break;
-            case 6:
-                returnPaint = Color.BEIGE;
-                break;
-            case 7:
-                returnPaint = Color.BURLYWOOD;
-                break;
-            default:
-                returnPaint = Color.WHITE;
-                break;
-        }
+        Paint returnPaint = switch (i) {
+            case 0 -> Color.TRANSPARENT;
+            case 1 -> Color.AQUA;
+            case 2 -> Color.BLUEVIOLET;
+            case 3 -> Color.DARKGREEN;
+            case 4 -> Color.YELLOW;
+            case 5 -> Color.RED;
+            case 6 -> Color.BEIGE;
+            case 7 -> Color.BURLYWOOD;
+            default -> Color.WHITE;
+        };
         return returnPaint;
     }
 
-
     private void refreshBrick(ViewData brick) {
-        if (isPause.getValue() == Boolean.FALSE) {
+        if (!stateManager.isPaused()) {
             brickPanel.setLayoutX(gamePanel.getLayoutX() + brick.getxPosition() * brickPanel.getVgap() + brick.getxPosition() * BRICK_SIZE);
             brickPanel.setLayoutY(-42 + gamePanel.getLayoutY() + brick.getyPosition() * brickPanel.getHgap() + brick.getyPosition() * BRICK_SIZE);
             for (int i = 0; i < brick.getBrickData().length; i++) {
@@ -225,7 +191,7 @@ public class GuiController implements Initializable {
     }
 
     private void moveDown(MoveEvent event) {
-        if (isPause.getValue() == Boolean.FALSE) {
+        if (!stateManager.isPaused() && !stateManager.isGameOver()) {
             DownData downData = eventListener.onDownEvent(event);
             if (downData.getClearRow() != null && downData.getClearRow().getLinesRemoved() > 0) {
                 if (scoreSoundPlayer != null) {
@@ -247,40 +213,10 @@ public class GuiController implements Initializable {
     }
 
     public void bindScore(IntegerProperty integerProperty) {
-        scoreLabel.textProperty().bind(integerProperty.asString("Score: %d"));
-        scoreLabel.setTextFill(Color.WHITE);
-        scoreLabel.setFont(Font.font("Arial", 24));
     }
 
-    public void gameOver() {
-        timeLine.stop();
-        gameOverPanel.setVisible(true);
-        isGameOver.setValue(Boolean.TRUE);
-    }
+    public void gameOver() { stateManager.gameOver(); }
+    public void newGame(ActionEvent e) { stateManager.newGame(eventListener); }
+    public void pauseGame(ActionEvent e) { stateManager.togglePause(); }
 
-    public void newGame(ActionEvent actionEvent) {
-        timeLine.stop();
-        gameOverPanel.setVisible(false);
-        eventListener.createNewGame();
-        gamePanel.requestFocus();
-        timeLine.play();
-        isPause.setValue(Boolean.FALSE);
-        isGameOver.setValue(Boolean.FALSE);
-    }
-
-    public void pauseGame(ActionEvent actionEvent) {
-        if (isGameOver.get()) return;
-
-        if (isPause.get()) {
-            timeLine.play();
-            isPause.set(false);
-            //if (pauseButton != null) pauseButton.setText("Pause");
-        } else {
-            timeLine.pause();
-            isPause.set(true);
-            //if (pauseButton != null) pauseButton.setText("Resume");
-        }
-
-        gamePanel.requestFocus();
-    }
-    }
+}
