@@ -8,14 +8,9 @@ import javafx.util.Duration;
 
 
 public class GameStateManager {
-    private final GameOverPanel gameOverPanel;
     private final BooleanProperty paused = new SimpleBooleanProperty(false);
     private final BooleanProperty gameOver = new SimpleBooleanProperty(false);
     private Timeline timeline;
-
-    public GameStateManager(GameOverPanel gameOverPanel) {
-        this.gameOverPanel = gameOverPanel;
-    }
 
     public void startGameLoop(Runnable tickAction) {
         timeline = new Timeline(new KeyFrame(Duration.millis(400), e -> tickAction.run()));
@@ -28,13 +23,11 @@ public class GameStateManager {
 
     public void gameOver() {
         timeline.stop();
-        gameOverPanel.setVisible(true);
         gameOver.set(true);
     }
 
     public void newGame(InputEventListener listener) {
         timeline.stop();
-        gameOverPanel.setVisible(false);
         listener.createNewGame();
         timeline.play();
         paused.set(false);
@@ -50,5 +43,13 @@ public class GameStateManager {
             timeline.pause();
             paused.set(true);
         }
+    }
+
+    public BooleanProperty pausedProperty() {
+        return paused;
+    }
+
+    public BooleanProperty gameOverProperty() {
+        return gameOver;
     }
 }

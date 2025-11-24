@@ -1,5 +1,6 @@
 package com.comp2042;
 
+import java.util.Deque;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.Arrays;
@@ -20,7 +21,7 @@ public final class MatrixOperations {
         return list.stream().map(MatrixOperations::copy).collect(Collectors.toList());
     }
 
-    public static int[][] rebuildMatrix(int[][] matrix, java.util.Deque<int[]> newRows) {
+    public static int[][] rebuildMatrix(int[][] matrix, Deque<int[]> newRows) {
         int[][] tmp = new int[matrix.length][matrix[0].length];
         for (int i = matrix.length - 1; i >= 0; i--) {
             int[] row = newRows.pollLast();

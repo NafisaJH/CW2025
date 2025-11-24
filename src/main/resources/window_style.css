@@ -6,6 +6,15 @@
     -fx-border-width: 2px;
     -fx-border-color: whitesmoke;
     -fx-border-radius: 17px;
+
+    -fx-pref-width: 120px;
+    -fx-pref-height: 120px;
+
+    -fx-min-width: 120px;
+    -fx-min-height: 120px;
+
+    -fx-max-width: 120px;
+    -fx-max-height: 120px;
 }
 
 .gameBoard {
@@ -62,6 +71,18 @@
     -fx-font-family: "Let's go Digital";
     -fx-font-size: 48;
     -fx-background-color: red;
+}
+
+.playAgainStyle {
+    -fx-font-family: "Let's go Digital";
+    -fx-font-size: 35;
+    -fx-background-color: #05a633;
+}
+
+.pauseButton {
+    -fx-font-family: "Let's go Digital";
+    -fx-font-size: 23;
+    -fx-background-color: blue;
 }
 
 .scoreClass{
