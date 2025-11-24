@@ -6,11 +6,11 @@ import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.Group;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.effect.Reflection;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
-import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.media.Media;
 import javafx.scene.paint.Color;
@@ -26,8 +26,6 @@ public class GuiController implements Initializable {
 
     private static final int BRICK_SIZE = 20;
 
-    public BorderPane gameBoard;
-
     @FXML
     private GridPane gamePanel;
 
@@ -41,15 +39,15 @@ public class GuiController implements Initializable {
     private GameOverPanel gameOverPanel;
 
     @FXML
+    private Button playAgainButton;
+
+    @FXML
+    private Button pauseButton;
+
+    @FXML
     private GridPane nextBrickPanel;
 
     private Rectangle[][] nextBrickRectangles;
-
-    //@FXML
-    //private Button pauseButton;
-
-    @FXML
-    private Label scoreLabel;
 
     private Rectangle[][] displayMatrix;
 
@@ -57,20 +55,26 @@ public class GuiController implements Initializable {
 
     private Rectangle[][] rectangles;
 
-    private MediaPlayer scoreSoundPlayer;
-
     private GameStateManager stateManager;
-
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-        Media sound = new Media(getClass().getResource("/score_points.mp3").toExternalForm());
-        scoreSoundPlayer = new MediaPlayer(sound);
         Font.loadFont(getClass().getClassLoader().getResource("digital.ttf").toExternalForm(), 38);
         gamePanel.setFocusTraversable(true);
         gamePanel.requestFocus();
-        stateManager = new GameStateManager(gameOverPanel);
 
+        stateManager = new GameStateManager();
+
+        gameOverPanel.setVisible(false);
+        playAgainButton.setVisible(false);
+
+        stateManager.gameOverProperty().addListener((obs, wasOver, isOver) -> {
+            gameOverPanel.setVisible(isOver);
+            playAgainButton.setVisible(isOver);
+        });
+        stateManager.pausedProperty().addListener((obs, old, paused) -> {
+            pauseButton.setText(paused ? "Resume" : "Pause");
+        });
 
         gamePanel.setOnKeyPressed(new EventHandler<KeyEvent>() {
             @Override
@@ -83,7 +87,6 @@ public class GuiController implements Initializable {
                         case DOWN, S -> moveDown(new MoveEvent(EventType.DOWN, EventSource.USER));
                     }
                     keyEvent.consume();
-
                 }
 
                 if (keyEvent.getCode() == KeyCode.P) {
@@ -91,12 +94,12 @@ public class GuiController implements Initializable {
                     keyEvent.consume();
                     return;
                 }
+
                 if (keyEvent.getCode() == KeyCode.N) {
                     newGame(null);
                 }
             }
         });
-        gameOverPanel.setVisible(false);
 
         final Reflection reflection = new Reflection();
         reflection.setFraction(0.8);
@@ -130,22 +133,44 @@ public class GuiController implements Initializable {
         brickPanel.setLayoutY(-42 + gamePanel.getLayoutY() + brick.getyPosition() * brickPanel.getHgap() + brick.getyPosition() * BRICK_SIZE);
 
         showNextBrick(brick);
+
     }
 
+
     private Paint getFillColor(int i) {
-        Paint returnPaint = switch (i) {
-            case 0 -> Color.TRANSPARENT;
-            case 1 -> Color.AQUA;
-            case 2 -> Color.BLUEVIOLET;
-            case 3 -> Color.DARKGREEN;
-            case 4 -> Color.YELLOW;
-            case 5 -> Color.RED;
-            case 6 -> Color.BEIGE;
-            case 7 -> Color.BURLYWOOD;
-            default -> Color.WHITE;
-        };
+        Paint returnPaint;
+        switch (i) {
+            case 0:
+                returnPaint = Color.TRANSPARENT;
+                break;
+            case 1:
+                returnPaint = Color.AQUA;
+                break;
+            case 2:
+                returnPaint = Color.BLUEVIOLET;
+                break;
+            case 3:
+                returnPaint = Color.DARKGREEN;
+                break;
+            case 4:
+                returnPaint = Color.YELLOW;
+                break;
+            case 5:
+                returnPaint = Color.RED;
+                break;
+            case 6:
+                returnPaint = Color.BEIGE;
+                break;
+            case 7:
+                returnPaint = Color.BURLYWOOD;
+                break;
+            default:
+                returnPaint = Color.WHITE;
+                break;
+        }
         return returnPaint;
     }
+
 
     private void refreshBrick(ViewData brick) {
         if (!stateManager.isPaused()) {
@@ -156,21 +181,8 @@ public class GuiController implements Initializable {
                     setRectangleData(brick.getBrickData()[i][j], rectangles[i][j]);
                 }
             }
-        }
-    }
 
-    public void refreshGameBackground(int[][] board) {
-        for (int i = 2; i < board.length; i++) {
-            for (int j = 0; j < board[i].length; j++) {
-                setRectangleData(board[i][j], displayMatrix[i][j]);
-            }
         }
-    }
-
-    private void setRectangleData(int color, Rectangle rectangle) {
-        rectangle.setFill(getFillColor(color));
-        rectangle.setArcHeight(9);
-        rectangle.setArcWidth(9);
     }
 
     private void showNextBrick(ViewData brick) {
@@ -190,14 +202,24 @@ public class GuiController implements Initializable {
         }
     }
 
+    public void refreshGameBackground(int[][] board) {
+        for (int i = 2; i < board.length; i++) {
+            for (int j = 0; j < board[i].length; j++) {
+                setRectangleData(board[i][j], displayMatrix[i][j]);
+            }
+        }
+    }
+
+    private void setRectangleData(int color, Rectangle rectangle) {
+        rectangle.setFill(getFillColor(color));
+        rectangle.setArcHeight(9);
+        rectangle.setArcWidth(9);
+    }
+
     private void moveDown(MoveEvent event) {
         if (!stateManager.isPaused() && !stateManager.isGameOver()) {
             DownData downData = eventListener.onDownEvent(event);
             if (downData.getClearRow() != null && downData.getClearRow().getLinesRemoved() > 0) {
-                if (scoreSoundPlayer != null) {
-                    scoreSoundPlayer.stop();
-                    scoreSoundPlayer.play();
-                }
                 NotificationPanel notificationPanel = new NotificationPanel("+" + downData.getClearRow().getScoreBonus());
                 groupNotification.getChildren().add(notificationPanel);
                 notificationPanel.showScore(groupNotification.getChildren());
@@ -206,6 +228,7 @@ public class GuiController implements Initializable {
             showNextBrick(downData.getViewData());
         }
         gamePanel.requestFocus();
+
     }
 
     public void setEventListener(InputEventListener eventListener) {
@@ -215,8 +238,11 @@ public class GuiController implements Initializable {
     public void bindScore(IntegerProperty integerProperty) {
     }
 
-    public void gameOver() { stateManager.gameOver(); }
-    public void newGame(ActionEvent e) { stateManager.newGame(eventListener); }
+    public void gameOver() {
+        stateManager.gameOver();
+    }
+    public void newGame(ActionEvent e) {
+        stateManager.newGame(eventListener);
+    }
     public void pauseGame(ActionEvent e) { stateManager.togglePause(); }
-
 }
