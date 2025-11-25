@@ -1,5 +1,6 @@
 package com.comp2042;
 
+import com.comp2042.commands.*;
 import javafx.beans.property.IntegerProperty;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
@@ -17,6 +18,8 @@ import javafx.scene.paint.Paint;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
 import java.net.URL;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.ResourceBundle;
 
 public class GuiController implements Initializable {
@@ -54,17 +57,34 @@ public class GuiController implements Initializable {
 
     private GameStateManager stateManager;
 
+    private Map<KeyCode, Command> commandMap = new HashMap<>();
+
+    private void initCommands() {
+        commandMap.put(KeyCode.LEFT, new MoveLeftCommand(eventListener, this::refreshBrick));
+        commandMap.put(KeyCode.A,    new MoveLeftCommand(eventListener, this::refreshBrick));
+
+        commandMap.put(KeyCode.RIGHT, new MoveRightCommand(eventListener, this::refreshBrick));
+        commandMap.put(KeyCode.D,     new MoveRightCommand(eventListener, this::refreshBrick));
+
+        commandMap.put(KeyCode.UP, new RotateCommand(eventListener, this::refreshBrick));
+        commandMap.put(KeyCode.W,  new RotateCommand(eventListener, this::refreshBrick));
+
+        commandMap.put(KeyCode.DOWN, new MoveDownCommand(this::moveDown));
+        commandMap.put(KeyCode.S,    new MoveDownCommand(this::moveDown));
+
+        commandMap.put(KeyCode.P, new PauseCommand(() -> pauseGame(null)));
+        commandMap.put(KeyCode.N, new NewGameCommand(() -> newGame(null)));
+    }
+
+
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         Font.loadFont(getClass().getClassLoader().getResource("digital.ttf").toExternalForm(), 38);
+
         gamePanel.setFocusTraversable(true);
         gamePanel.requestFocus();
 
         stateManager = new GameStateManager();
-
-        gameOverPanel.setVisible(false);
-        playAgainButton.setVisible(false);
-
         stateManager.gameOverProperty().addListener((obs, wasOver, isOver) -> {
             gameOverPanel.setVisible(isOver);
             playAgainButton.setVisible(isOver);
@@ -73,30 +93,26 @@ public class GuiController implements Initializable {
             pauseButton.setText(paused ? "Resume" : "Pause");
         });
 
-        gamePanel.setOnKeyPressed(new EventHandler<KeyEvent>() {
-            @Override
-            public void handle(KeyEvent keyEvent) {
-                if (!stateManager.isPaused() && !stateManager.isGameOver()) {
-                    switch (keyEvent.getCode()) {
-                        case LEFT, A -> refreshBrick(eventListener.onLeftEvent(new MoveEvent(EventType.LEFT, EventSource.USER)));
-                        case RIGHT, D -> refreshBrick(eventListener.onRightEvent(new MoveEvent(EventType.RIGHT, EventSource.USER)));
-                        case UP, W -> refreshBrick(eventListener.onRotateEvent(new MoveEvent(EventType.ROTATE, EventSource.USER)));
-                        case DOWN, S -> moveDown(new MoveEvent(EventType.DOWN, EventSource.USER));
+        gamePanel.setOnKeyPressed(event -> {
+            if (!stateManager.isPaused() && !stateManager.isGameOver()) {
+                Command command = commandMap.get(event.getCode());
+                if (command != null) {
+                    command.execute();
+                    event.consume();
+                }
+            } else {
+                if (event.getCode() == KeyCode.P || event.getCode() == KeyCode.N) {
+                    Command command = commandMap.get(event.getCode());
+                    if (command != null) {
+                        command.execute();
+                        event.consume();
                     }
-                    keyEvent.consume();
-                }
-
-                if (keyEvent.getCode() == KeyCode.P) {
-                    pauseGame(null);
-                    keyEvent.consume();
-                    return;
-                }
-
-                if (keyEvent.getCode() == KeyCode.N) {
-                    newGame(null);
                 }
             }
         });
+
+        gameOverPanel.setVisible(false);
+        playAgainButton.setVisible(false);
 
         final Reflection reflection = new Reflection();
         reflection.setFraction(0.8);
@@ -230,6 +246,7 @@ public class GuiController implements Initializable {
 
     public void setEventListener(InputEventListener eventListener) {
         this.eventListener = eventListener;
+        initCommands();   // ← initialize commands AFTER listener is available
     }
 
     public void bindScore(IntegerProperty integerProperty) {
