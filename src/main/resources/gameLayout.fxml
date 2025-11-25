@@ -1,30 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
 <?import com.comp2042.GameOverPanel?>
+<?import java.net.URL?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.Group?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
-<?import javafx.scene.control.ToggleButton?>
-<?import javafx.scene.Group?>
-<?import javafx.scene.layout.*?>
-<?import javafx.scene.text.Text?>
-<?import java.net.URL?>
-<Pane fx:controller="com.comp2042.GuiController"
-      xmlns:fx="http://javafx.com/fxml">
-    <GridPane fx:id="brickPanel" vgap="1" hgap="1"/>
-    <BorderPane styleClass="gameBoard" fx:id="gameBoard">
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Pane?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
+
+<Pane prefHeight="489.0" prefWidth="518.0" xmlns:fx="http://javafx.com/fxml/1" xmlns="http://javafx.com/javafx/25" fx:controller="com.comp2042.GuiController">
+    <GridPane fx:id="brickPanel" hgap="1" vgap="1" />
+    <BorderPane fx:id="gameBoard" styleClass="gameBoard">
         <center>
-            <GridPane fx:id="gamePanel" hgap="1" vgap="1" layoutY="30" layoutX="40"/>
+            <GridPane fx:id="gamePanel" hgap="1" layoutX="40" layoutY="30" vgap="1" />
         </center>
     </BorderPane>
     <Group fx:id="groupNotification" layoutX="14" layoutY="203">
         <VBox alignment="CENTER">
-            <GameOverPanel fx:id="gameOverPanel"/>
-            <Button fx:id="playAgainButton" text="PLAY AGAIN" onAction="#newGame" styleClass="playAgainStyle"/>
+            <GameOverPanel fx:id="gameOverPanel" />
+            <Button fx:id="playAgainButton" onAction="#newGame" styleClass="playAgainStyle" text="PLAY AGAIN" />
         </VBox>
     </Group>
-    <VBox layoutX="300" layoutY="50" spacing="5" alignment="CENTER">
-        <Button fx:id="pauseButton" text="Pause" onAction="#pauseGame" styleClass="pauseStyle"/>
-        <GridPane fx:id="nextBrickPanel" hgap="1" vgap="1" styleClass="nextBrick"/>
+    <VBox alignment="CENTER" layoutX="300" layoutY="50" spacing="5">
+        <Button fx:id="pauseButton" onAction="#pauseGame" styleClass="pauseStyle" text="Pause" />
+        <GridPane fx:id="nextBrickPanel" hgap="1" styleClass="nextBrick" vgap="1" />
     </VBox>
+   <HBox prefHeight="100.0" prefWidth="200.0" />
+   <Label alignment="TOP_RIGHT" layoutX="335.0" layoutY="203.0" styleClass="scoreClass" text="Score" textFill="#fcf4f4">
+      <font>
+         <Font size="23.0" />
+      </font>
+      <opaqueInsets>
+         <Insets />
+      </opaqueInsets>
+   </Label>
+   <Label layoutX="440.0" layoutY="203.0" styleClass="scoreClass" text="0">
+      <font>
+         <Font size="20.0" />
+      </font>
+   </Label>
     <stylesheets>
-        <URL value="@window_style.css"/>
+        <URL value="@window_style.css" />
     </stylesheets>
 </Pane>

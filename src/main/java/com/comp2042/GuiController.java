@@ -47,6 +47,8 @@ public class GuiController implements Initializable {
     @FXML
     private GridPane nextBrickPanel;
 
+    private Label scoreLabel;
+
     private Rectangle[][] nextBrickRectangles;
 
     private Rectangle[][] displayMatrix;
@@ -235,7 +237,10 @@ public class GuiController implements Initializable {
         this.eventListener = eventListener;
     }
 
-    public void bindScore(IntegerProperty integerProperty) {
+    public void bindScore(IntegerProperty scoreProperty) {
+        if (scoreLabel != null && scoreProperty != null) {
+            scoreLabel.textProperty().bind(scoreProperty.asString());
+        }
     }
 
     public void gameOver() {
