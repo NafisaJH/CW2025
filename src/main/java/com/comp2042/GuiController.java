@@ -246,7 +246,7 @@ public class GuiController implements Initializable {
 
     public void setEventListener(InputEventListener eventListener) {
         this.eventListener = eventListener;
-        initCommands();   // ← initialize commands AFTER listener is available
+        initCommands();
     }
 
     public void bindScore(IntegerProperty integerProperty) {
