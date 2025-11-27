@@ -20,7 +20,7 @@ public class Main extends Application {
         controller.setStage(primaryStage); // pass stage
 
         primaryStage.setTitle("TetrisJFX");
-        primaryStage.setScene(new Scene(menuRoot, 500, 510));
+        primaryStage.setScene(new Scene(menuRoot, 1000, 610));
         primaryStage.show();
     }
 

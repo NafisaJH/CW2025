@@ -24,7 +24,7 @@ public class MainMenuController {
             Parent gameRoot = gameLoader.load();
             GuiController guiController = gameLoader.getController();
 
-            Scene gameScene = new Scene(gameRoot, 500, 510);
+            Scene gameScene = new Scene(gameRoot, 1000, 610);
             stage.setScene(gameScene);
 
             new GameController(guiController);

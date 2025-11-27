@@ -6,25 +6,26 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.Text?>
 <?import java.net.URL?>
-<Pane fx:controller="com.comp2042.GuiController"
-      xmlns:fx="http://javafx.com/fxml">
-    <GridPane fx:id="brickPanel" vgap="1" hgap="1"/>
-    <BorderPane styleClass="gameBoard" fx:id="gameBoard">
+<Pane prefHeight="559.0" prefWidth="535.0" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.comp2042.GuiController">
+    <GridPane fx:id="brickPanel" hgap="1" vgap="1" />
+    <BorderPane fx:id="gameBoard" styleClass="gameBoard">
         <center>
-            <GridPane fx:id="gamePanel" hgap="1" vgap="1" layoutY="30" layoutX="40"/>
+            <GridPane fx:id="gamePanel" hgap="1" layoutX="40" layoutY="30" vgap="1" />
         </center>
     </BorderPane>
     <Group fx:id="groupNotification" layoutX="14" layoutY="203">
         <VBox alignment="CENTER">
-            <GameOverPanel fx:id="gameOverPanel"/>
-            <Button fx:id="playAgainButton" text="PLAY AGAIN" onAction="#newGame" styleClass="playAgainStyle"/>
+            <GameOverPanel fx:id="gameOverPanel" />
+            <Button fx:id="playAgainButton" onAction="#newGame" styleClass="playAgainStyle" text="PLAY AGAIN" />
         </VBox>
     </Group>
-    <VBox layoutX="300" layoutY="50" spacing="5" alignment="CENTER">
-        <Button fx:id="pauseButton" text="Pause" onAction="#pauseGame" styleClass="pauseButton"/>
-        <GridPane fx:id="nextBrickPanel" hgap="1" vgap="1" styleClass="nextBrick"/>
-        <Label fx:id="scoreLabel" text="Score: 0"/>
+    <VBox alignment="CENTER" layoutX="300" layoutY="50" spacing="5">
+        <Button fx:id="pauseButton" onAction="#pauseGame" styleClass="pauseStyle" text="Pause" />
+        <GridPane fx:id="nextBrickPanel" hgap="1" styleClass="nextBrick" vgap="1" />
     </VBox>
+    <HBox prefHeight="100.0" prefWidth="200.0" />
+    <Label fx:id="score" layoutX="413.0" layoutY="262.0" styleClass="scoreClass" text="0" />
+    <Label layoutX="301.0" layoutY="262.0" styleClass="scoreClass" text="Score:" />
     <stylesheets>
         <URL value="@window_style.css"/>
     </stylesheets>

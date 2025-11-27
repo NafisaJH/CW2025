@@ -4,16 +4,14 @@
     -fx-font-weight: bold;
 }
 
-.startButton {
-    -fx-background-color: #3399ff;
-    -fx-text-fill: white;
-    -fx-font-size: 18px;
-    -fx-padding: 10 20;
+.menuButton {
+    -fx-font-size: 20px;          /* Bigger font */
+    -fx-text-fill: white;         /* White text */
+    -fx-background-color: black;  /* Black background */
+    -fx-pref-width: 200px;        /* Wider button */
+    -fx-pref-height: 50px;        /* Taller button */
 }
 
-.exitButton {
-    -fx-background-color: #cccccc;
-    -fx-text-fill: black;
-    -fx-font-size: 18px;
-    -fx-padding: 10 20;
+.menuButton:hover {
+    -fx-background-color: #333333; /* Dark gray on hover */
 }
